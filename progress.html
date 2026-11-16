@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Progress · IELTS for Brokies</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='3' fill='%235b2333'/%3E%3Ctext x='16' y='21' font-family='Arial' font-size='14' font-weight='700' fill='white' text-anchor='middle'%3EIB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-head">
+  <a class="logo" href="index.html"><span class="logo-mark">IB</span><span class="logo-text">IELTS for Brokies</span></a>
+  <nav class="nav">
+    <a href="index.html">Practise</a>
+    <a href="progress.html" aria-current="page">My progress</a>
+    <button class="theme-btn" data-theme-toggle type="button">☾ Dark mode</button>
+  </nav>
+</header>
+<main class="page">
+  <h1>My progress</h1>
+  <p class="lead" style="color:var(--muted)">Every attempt you finish is listed here. It is saved only in this browser on this device. Nobody else can see it.</p>
+  <div id="summary" class="score-box"></div>
+  <div id="list"></div>
+  <p><button class="btn" type="button" id="clearBtn">Clear my progress</button> <a class="btn primary" href="index.html" style="text-decoration:none">Start a new test</a></p>
+</main>
+<div id="modal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="dialog"><h2 id="modalTitle">Clear all progress?</h2><p id="modalText">This deletes every saved attempt from this browser. It cannot be undone.</p>
+  <div class="actions"><button class="btn" type="button" id="noBtn">Keep my progress</button><button class="btn primary" type="button" id="yesBtn">Yes, clear it</button></div></div>
+</div>
+<section id="reviewBox"></section>
+<footer class="site-foot" id="siteFoot"></footer>
+<script src="js/common.js"></script>
+<script src="js/config.js"></script>
+<script src="js/reviews.js"></script>
+<script>
+(function () {
+  var I = window.IELTS, esc = I.esc;
+  I.fillFooter(document.getElementById("siteFoot"));
+  function render() {
+    var list = I.progress.all();
+    var box = document.getElementById("list");
+    if (!I.store.available()) {
+      box.innerHTML = '<div class="instr">Your browser is blocking storage (for example, private browsing), so progress cannot be saved here. Tests still work normally.</div>';
+      document.getElementById("summary").innerHTML = ""; return;
+    }
+    if (!list.length) { box.innerHTML = '<div class="instr">No attempts yet. Finish a test and your score will appear here.</div>'; document.getElementById("summary").innerHTML = ""; return; }
+    var best = {};
+    list.forEach(function (a) { if (a.band != null && (best[a.section] == null || a.band > best[a.section])) best[a.section] = a.band; });
+    document.getElementById("summary").innerHTML = ["listening", "reading", "writing", "speaking"].map(function (s) {
+      return '<div class="score-tile"><div class="k">Best ' + I.SECTIONS[s].name + '</div><div class="v">' + (best[s] != null ? I.fmtBand(best[s]) : "–") + "</div></div>";
+    }).join("");
+    var h = '<table class="res-table"><thead><tr><th>Date</th><th>Section</th><th>Session</th><th>Mode</th><th>Score</th><th>Band</th></tr></thead><tbody>';
+    list.forEach(function (a) {
+      h += "<tr><td>" + esc(I.fmtDate(a.date)) + "</td><td>" + esc(I.SECTIONS[a.section] ? I.SECTIONS[a.section].name : a.section) + "</td><td>" + esc(a.session) + "</td><td>" + (a.mode === "exam" ? "Exam" : "Practice") +
+        "</td><td>" + esc(a.score) + "</td><td>" + (a.band != null ? I.fmtBand(a.band) + (a.selfRated ? " <small>(self-rated)</small>" : " <small>(estimated)</small>") : "<small>not rated</small>") + "</td></tr>";
+    });
+    box.innerHTML = h + "</tbody></table>";
+  }
+  var modal = document.getElementById("modal");
+  document.getElementById("clearBtn").onclick = function () { modal.classList.remove("hidden"); document.getElementById("noBtn").focus(); };
+  document.getElementById("noBtn").onclick = function () { modal.classList.add("hidden"); };
+  document.getElementById("yesBtn").onclick = function () { I.progress.clear(); modal.classList.add("hidden"); render(); };
+  render();
+})();
+</script>
+</body>
+</html>
